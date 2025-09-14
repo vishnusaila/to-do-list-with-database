@@ -1,19 +1,20 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const mysql = require("mysql2");
+const path = require('path');
 
+const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 const db = mysql.createConnection({
-    host: "127.0.0.1",
-    port: 33066,
-    user: "root",
-    password: "vishnuyadav",
-    database: "todo",
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
 });
-
 
 db.connect((err) => {
     if (err) {
@@ -23,55 +24,38 @@ db.connect((err) => {
     console.log("Connected to database successfully");
 });
 
-// Get all to-do items
-app.get("/", (req, res) => {
-    console.log("GET / request received");
+// API Endpoints
+app.get("/todos", (req, res) => {
     db.query('SELECT * FROM todoitems', (err, result) => {
-        if (err) {
-            console.error("Error occurred:", err);
-            res.status(500).send("Error fetching data");
-            return;
-        }
+        if (err) return res.status(500).send("Error fetching data");
         res.json(result);
     });
 });
 
-// Add a new to-do item
 app.post("/additem", (req, res) => {
     const { text } = req.body;
-    console.log("Request body:", req.body);
-
     const query = 'INSERT INTO todoitems (itemdescription) VALUES (?)';
     db.query(query, [text], (err, result) => {
-        if (err) {
-            console.error("Error occurred while inserting:", err);
-            res.status(500).send("Error adding data");
-            return;
-        }
-        console.log("Item added successfully");
+        if (err) return res.status(500).send("Error adding data");
         res.send("Item added successfully");
     });
 });
 
-
-
-// Delete a to-do item by ID
 app.delete("/deleteitem/:id", (req, res) => {
     const { id } = req.params;
-
     const query = 'DELETE FROM todoitems WHERE id = ?';
     db.query(query, [id], (err, result) => {
-        if (err) {
-            console.error("Error deleting item:", err);
-            res.status(500).send("Error deleting item");
-            return;
-        }
-        console.log(`Item with ID ${id} deleted successfully`);
+        if (err) return res.status(500).send("Error deleting item");
         res.send(`Item with ID ${id} deleted successfully`);
     });
 });
 
+// Serve frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

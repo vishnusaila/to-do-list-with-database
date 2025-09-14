@@ -63,7 +63,7 @@
     let todos = [];
 
     async function fetchTodos() {
-      const res = await fetch('http://localhost:3000');
+      const res = await fetch('/todos');
       todos = await res.json();
       renderTodos();
     }
@@ -90,7 +90,7 @@
       const text = input.value.trim();
       if (!text) return;
 
-      await fetch('http://localhost:3000/additem', {
+      await fetch('/additem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
@@ -101,7 +101,7 @@
     }
 
     async function deleteTodo(id) {
-      await fetch(`http://localhost:3000/deleteitem/${id}`, { method: 'DELETE' });
+      await fetch(`/deleteitem/${id}`, { method: 'DELETE' });
       fetchTodos();
     }
 
